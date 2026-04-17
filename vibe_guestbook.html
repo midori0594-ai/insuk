@@ -253,47 +253,122 @@
 
             <!-- 메시지 목록 영역 -->
             <div class="messages-section">
-                <h3>최신 방명록 목록</h3>
+                <h3>최신 방명록 목록 <span id="vibe-count" style="font-size: 16px; color: var(--table-header-text); background: rgba(59, 130, 246, 0.2); padding: 4px 12px; border-radius: 20px; vertical-align: middle; margin-left: 10px;">0</span></h3>
                 <div class="message-list" id="message-list">
-                    <div class="message-card">
-                        <div class="msg-header">
-                            <span class="msg-author">우주코더</span>
-                            <span class="msg-date">방금 전</span>
-                        </div>
-                        <p class="msg-content">설명이 아주 유익했습니다! 앞으로의 AI 코딩 생태계가 정말 기대되네요. 자료 잘 보고 갑니다.</p>
-                    </div>
-                    <div class="message-card">
-                        <div class="msg-header">
-                            <span class="msg-author">김바이브</span>
-                            <span class="msg-date">2시간 전</span>
-                        </div>
-                        <p class="msg-content">v0.dev 부분을 인상 깊게 보았습니다. 좋은 내용 정리해주셔서 감사합니다!! 😊</p>
-                    </div>
+                    <!-- 메시지가 로드됩니다 -->
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // 프론트엔드 레벨에서의 간단한 방명록 추가 기능 구현 (UI 피드백 제공용)
-        document.getElementById('vibe-gb-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const author = document.getElementById('author').value;
-            const message = document.getElementById('message').value;
-            
+        document.addEventListener('DOMContentLoaded', () => {
+            // Supabase Initialization
+            const supabaseUrl = 'https://ulkdsgqjmjjbhdmtgymu.supabase.co';
+            const supabaseKey = 'sb_publishable_BYZ64O6IkYJZYhH0jvAsew_FPRh7FkZ';
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+            const form = document.getElementById('vibe-gb-form');
             const list = document.getElementById('message-list');
-            const newCard = document.createElement('div');
-            newCard.className = 'message-card';
-            newCard.innerHTML = `
-                <div class="msg-header">
-                    <span class="msg-author">${author.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
-                    <span class="msg-date">방금 전</span>
-                </div>
-                <p class="msg-content">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
-            `;
-            
-            list.insertBefore(newCard, list.firstChild);
-            this.reset();
+            const authorInput = document.getElementById('author');
+            const messageInput = document.getElementById('message');
+            const countBadge = document.getElementById('vibe-count');
+
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                const d = new Date(dateString);
+                const now = new Date();
+                const diff = Math.floor((now - d) / 1000); 
+
+                if (diff < 60) return `방금 전`;
+                if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+                if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+
+                return d.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            };
+
+            const loadMessages = async () => {
+                try {
+                    const { data, error } = await supabase
+                        .from('guestbook')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+                    renderMessages(data || []);
+                } catch (error) {
+                    console.error('불러오기 실패:', error);
+                    list.innerHTML = '<div style="color:#ef4444; padding: 20px;">데이터를 불러오는 중 오류가 발생했습니다.</div>';
+                }
+            };
+
+            const renderMessages = (messages) => {
+                if (countBadge) countBadge.textContent = messages.length;
+                list.innerHTML = '';
+
+                if (messages.length === 0) {
+                    list.innerHTML = '<div style="color:var(--text-dim); padding: 20px; text-align: center;">아직 방명록이 없습니다. 첫 작성자가 되어보세요! ✨</div>';
+                    return;
+                }
+
+                messages.forEach(msg => {
+                    const safeAuthor = msg.name ? msg.name.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '익명';
+                    const safeMessage = msg.message ? msg.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, '<br>') : '';
+                    
+                    const newCard = document.createElement('div');
+                    newCard.className = 'message-card';
+                    newCard.innerHTML = `
+                        <div class="msg-header">
+                            <span class="msg-author">${safeAuthor}</span>
+                            <span class="msg-date">${formatDate(msg.created_at)}</span>
+                        </div>
+                        <p class="msg-content">${safeMessage}</p>
+                    `;
+                    list.appendChild(newCard);
+                });
+            };
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const author = authorInput.value.trim();
+                const message = messageInput.value.trim();
+                const submitBtn = form.querySelector('.gb-submit');
+
+                if (author && message) {
+                    const originalText = submitBtn.textContent;
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '등록 중... ✨';
+                    submitBtn.style.opacity = '0.7';
+
+                    try {
+                        const { error } = await supabase
+                            .from('guestbook')
+                            .insert([
+                                { name: author, message: message }
+                            ]);
+
+                        if (error) throw error;
+                        
+                        await loadMessages();
+                        form.reset();
+                    } catch (error) {
+                        console.error('등록 실패:', error);
+                        alert('메시지 등록에 실패했습니다.');
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                        submitBtn.style.opacity = '1';
+                    }
+                }
+            });
+
+            loadMessages();
         });
     </script>
 </body>
