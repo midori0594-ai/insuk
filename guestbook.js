@@ -1,36 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Supabase Initialization
+    const supabaseUrl = 'https://ulkdsgqjmjjbhdmtgymu.supabase.co';
+    const supabaseKey = 'sb_publishable_BYZ64O6IkYJZYhH0jvAsew_FPRh7FkZ';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
     const form = document.getElementById('guestbook-form');
     const messagesContainer = document.getElementById('messages-container');
     const nameInput = document.getElementById('gb-name');
     const messageInput = document.getElementById('gb-message');
     const countBadge = document.getElementById('message-count');
 
-    // Load messages from localStorage
-    const loadMessages = () => {
-        const messages = JSON.parse(localStorage.getItem('guestbook_messages')) || [];
-        renderMessages(messages);
+    // Load messages from Supabase
+    const loadMessages = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('guestbook')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            renderMessages(data || []);
+        } catch (error) {
+            console.error('방명록을 불러오는 데 실패했습니다:', error);
+            messagesContainer.innerHTML = '<div class="empty-state" style="color:red;">데이터를 불러오는 중 오류가 발생했습니다.</div>';
+        }
     };
 
-    // Save messages to localStorage
-    const saveMessage = (name, message) => {
-        const messages = JSON.parse(localStorage.getItem('guestbook_messages')) || [];
-        
-        const newMessage = {
-            id: Date.now(),
-            name: name,
-            message: message,
-            date: new Date().toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            })
-        };
+    // Save message to Supabase
+    const saveMessage = async (name, message) => {
+        try {
+            const { error } = await supabase
+                .from('guestbook')
+                .insert([
+                    { name: name, message: message }
+                ]);
 
-        messages.unshift(newMessage); // Add to top
-        localStorage.setItem('guestbook_messages', JSON.stringify(messages));
-        return messages;
+            if (error) throw error;
+            
+            // Reload all messages after successful insert
+            await loadMessages();
+        } catch (error) {
+            console.error('방명록을 저장하는 데 실패했습니다:', error);
+            alert('방명록을 저장하는 데 실패했습니다.');
+        }
+    };
+
+    // Format date string safely
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const d = new Date(dateString);
+        return d.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     // Render messages to DOM
@@ -55,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             msgEl.innerHTML = `
                 <div class="msg-header">
                     <span class="msg-author">${msg.name}</span>
-                    <span class="msg-date">${msg.date}</span>
+                    <span class="msg-date">${formatDate(msg.created_at)}</span>
                 </div>
                 <div class="msg-body">
                     ${htmlMessage}
@@ -66,20 +91,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Handle form submission
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const name = nameInput.value.trim();
         const message = messageInput.value.trim();
+        const submitBtn = form.querySelector('.submit-btn');
 
         if (name && message) {
-            const updatedMessages = saveMessage(name, message);
-            renderMessages(updatedMessages);
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '등록 중...';
+
+            await saveMessage(name, message);
             
             // Clear form
             form.reset();
             
-            // Optional: nice little animation or feedback could go here
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
             nameInput.focus();
         }
     });
