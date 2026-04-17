@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이인숙 - 방명록</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="resume-container guestbook-container">
+        
+        <header class="resume-header form-header">
+            <div>
+                <h1>방명록</h1>
+                <div class="header-line"></div>
+            </div>
+            <a href="index.html" class="back-btn">← 이력서로 돌아가기</a>
+        </header>
+
+        <main class="guestbook-content">
+            <!-- Form Section -->
+            <section class="form-section">
+                <h3>발자취를 남겨주세요</h3>
+                <form id="guestbook-form" class="guestbook-form">
+                    <div class="input-group">
+                        <label for="gb-name">이름</label>
+                        <input type="text" id="gb-name" placeholder="이름을 입력하세요" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="gb-message">메시지</label>
+                        <textarea id="gb-message" placeholder="여기에 따뜻한 메시지를 남겨주세요." rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">방명록 등록</button>
+                </form>
+            </section>
+
+            <!-- Messages Section -->
+            <section class="messages-section">
+                <h3>방명록 목록 <span id="message-count" class="count-badge">0</span></h3>
+                <div id="messages-container" class="messages-list">
+                    <!-- Messages will be dynamically rendered here by guestbook.js -->
+                </div>
+            </section>
+        </main>
+        
+    </div>
+
+    <script src="guestbook.js"></script>
+</body>
+</html>

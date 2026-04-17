@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>바이브 코딩 - 방명록</title>
+    <!-- 고급스러운 폰트 적용 (Pretendard) -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        :root {
+            --primary-blue: #3b82f6;
+            --dark-bg: #0b1121;
+            --card-bg: #151e32;
+            --table-header-text: #a5f3fc;
+            --text-white: #f8fafc;
+            --text-dim: #cbd5e1;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --gradient-accent: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header-banner {
+            position: relative;
+            background: var(--gradient-accent);
+            padding: 24px 60px;
+            color: white;
+            font-size: 26px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 0 30px;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .nav-links {
+            margin-bottom: 25px;
+        }
+
+        .nav-links a {
+            color: #1e293b;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            font-size: 15px;
+            transition: color 0.2s;
+            padding: 8px 16px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+
+        .page-title {
+            font-size: 34px;
+            font-weight: 800;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 42px;
+            background-color: var(--primary-blue);
+            margin-right: 20px;
+            border-radius: 4px;
+        }
+
+        .guestbook-card {
+            background-color: var(--dark-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            color: var(--text-white);
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-section h3 {
+            margin-top: 0;
+            font-size: 22px;
+            color: var(--table-header-text);
+            margin-bottom: 24px;
+        }
+
+        .gb-input-group {
+            margin-bottom: 20px;
+        }
+
+        .gb-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14.5px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .gb-input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.03);
+            color: var(--text-white);
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .gb-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            background-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .gb-submit {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .gb-submit:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .messages-section h3 {
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: var(--text-white);
+        }
+        
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            border-left: 4px solid var(--primary-blue);
+            transition: transform 0.2s;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .message-card:hover {
+            transform: translateX(6px);
+        }
+
+        .msg-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .msg-author {
+            font-weight: 700;
+            color: #93c5fd;
+            font-size: 16px;
+        }
+
+        .msg-date {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .msg-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-white);
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .header-banner { padding: 20px; font-size: 22px; }
+            .container { padding: 0 20px; }
+            .guestbook-card { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-banner">
+        1. 바이브(Vibe) 코딩
+    </div>
+
+    <div class="container">
+        <div class="nav-links">
+            <a href="vibe_coding_tools.html">← 이전 화면으로 돌아가기</a>
+        </div>
+        
+        <h2 class="page-title">참여자 방명록</h2>
+
+        <div class="guestbook-card">
+            <!-- 폼 영역 -->
+            <div class="form-section">
+                <h3>📝 새로운 메시지 남기기</h3>
+                <form id="vibe-gb-form">
+                    <div class="gb-input-group">
+                        <label for="author">닉네임</label>
+                        <input type="text" id="author" class="gb-input" placeholder="이름이나 닉네임을 입력해주세요" required>
+                    </div>
+                    <div class="gb-input-group">
+                        <label for="message">메시지 본문</label>
+                        <textarea id="message" class="gb-input" placeholder="강의 후기, 질문, 자유로운 의견을 남겨주세요!" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="gb-submit">메시지 등록하기 ✨</button>
+                </form>
+            </div>
+
+            <!-- 메시지 목록 영역 -->
+            <div class="messages-section">
+                <h3>최신 방명록 목록</h3>
+                <div class="message-list" id="message-list">
+                    <div class="message-card">
+                        <div class="msg-header">
+                            <span class="msg-author">우주코더</span>
+                            <span class="msg-date">방금 전</span>
+                        </div>
+                        <p class="msg-content">설명이 아주 유익했습니다! 앞으로의 AI 코딩 생태계가 정말 기대되네요. 자료 잘 보고 갑니다.</p>
+                    </div>
+                    <div class="message-card">
+                        <div class="msg-header">
+                            <span class="msg-author">김바이브</span>
+                            <span class="msg-date">2시간 전</span>
+                        </div>
+                        <p class="msg-content">v0.dev 부분을 인상 깊게 보았습니다. 좋은 내용 정리해주셔서 감사합니다!! 😊</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 프론트엔드 레벨에서의 간단한 방명록 추가 기능 구현 (UI 피드백 제공용)
+        document.getElementById('vibe-gb-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const author = document.getElementById('author').value;
+            const message = document.getElementById('message').value;
+            
+            const list = document.getElementById('message-list');
+            const newCard = document.createElement('div');
+            newCard.className = 'message-card';
+            newCard.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-author">${author.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                    <span class="msg-date">방금 전</span>
+                </div>
+                <p class="msg-content">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+            `;
+            
+            list.insertBefore(newCard, list.firstChild);
+            this.reset();
+        });
+    </script>
+</body>
+</html>
